@@ -16,6 +16,8 @@ from fastapi_app.postgres_models import Item
 from fastapi_app.postgres_searcher import PostgresSearcher
 from fastapi_app.rag_base import ChatParams, RAGChatBase
 
+from sqlalchemy.orm import Session
+from .postgres_models import ChatHistory
 
 class SimpleRAGChat(RAGChatBase):
     def __init__(
@@ -156,3 +158,8 @@ class SimpleRAGChat(RAGChatBase):
                     delta=Message(content=str(response_chunk.choices[0].delta.content), role=AIChatRoles.ASSISTANT)
                 )
         return
+
+def save_chat_message(db: Session, user_id: str, message: str, role: str):
+    chat_message = ChatHistory(user_id=user_id, message=message, role=role)
+    db.add(chat_message)
+    db.commit()
