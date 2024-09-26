@@ -59,3 +59,11 @@ index_nomic = Index(
     postgresql_with={"m": 16, "ef_construction": 64},
     postgresql_ops={"embedding_nomic": "vector_ip_ops"},
 )
+
+# New ChatHistory model
+class ChatHistory(Base):
+    __tablename__ = 'chat_history'
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column()
+    message: Mapped[str] = mapped_column()
+    timestamp: Mapped[DateTime] = mapped_column(default=datetime.utcnow)
