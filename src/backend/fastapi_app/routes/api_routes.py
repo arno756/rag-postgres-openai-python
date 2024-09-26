@@ -7,6 +7,10 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
+from fastapi import Depends
+from .dependencies import get_db
+from .save_chat import save_chat_message
+
 from fastapi_app.api_models import (
     ChatRequest,
     ItemPublic,
@@ -96,6 +100,7 @@ async def chat_handler(
     openai_embed: EmbeddingsClient,
     openai_chat: ChatClient,
     chat_request: ChatRequest,
+    db: Session = Depends(get_db)
 ):
     searcher = PostgresSearcher(
         db_session=database_session,
@@ -126,6 +131,7 @@ async def chat_handler(
     contextual_messages, results, thoughts = await rag_flow.prepare_context(chat_params)
     response = await rag_flow.answer(
         chat_params=chat_params, contextual_messages=contextual_messages, results=results, earlier_thoughts=thoughts
+    save_chat_message(db, user_id, chat_request.messages[-1].content, chat_request.messages[-1].role)
     )
     return response
 
@@ -137,6 +143,7 @@ async def chat_stream_handler(
     openai_embed: EmbeddingsClient,
     openai_chat: ChatClient,
     chat_request: ChatRequest,
+    db: Session = Depends(get_db)
 ):
     searcher = PostgresSearcher(
         db_session=database_session,
@@ -172,4 +179,8 @@ async def chat_stream_handler(
     result = rag_flow.answer_stream(
         chat_params=chat_params, contextual_messages=contextual_messages, results=results, earlier_thoughts=thoughts
     )
+    async for response_chunk in chat_completion_async_stream:
+        # Save each chunk of the response
+        save_chat_message(db, user_id, response_chunk.choices[0].delta.content, "assistant")
+        yield response_chunk
     return StreamingResponse(content=format_as_ndjson(result), media_type="application/x-ndjson")
