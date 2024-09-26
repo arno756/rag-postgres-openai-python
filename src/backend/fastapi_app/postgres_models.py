@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Index
+from sqlalchemy import Index,Column, Integer, String, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from datetime import datetime
 
 
 # Define the models
