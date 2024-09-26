@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Index,Column, Integer, String, DateTime
+from sqlalchemy import Index,Column, Integer, String, Text, DateTime
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from datetime import datetime
-
 
 # Define the models
 class Base(DeclarativeBase):
@@ -64,7 +64,10 @@ index_nomic = Index(
 # New ChatHistory model
 class ChatHistory(Base):
     __tablename__ = 'chat_history'
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column()
-    message: Mapped[str] = mapped_column()
-    timestamp: Mapped[DateTime] = mapped_column(default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    role = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+# Add this to your existing Base.metadata.create_all(engine) call or equivalent
